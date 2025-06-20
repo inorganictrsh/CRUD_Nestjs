@@ -2,6 +2,9 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from './entitys/task.entity';
 import { Repository } from 'typeorm';
+import { CreateTaskDto } from './dto/create-task.dto';
+import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
+import { UpdateTaskDto } from './dto/update-task.dto';
 
 @Injectable()
 export class TaskService {
@@ -10,8 +13,9 @@ export class TaskService {
 
   // Add methods to interact with the taskRepository here, e.g., create, find, update, delete tasks.
 
-  async createTask(task: Task): Promise<Task> {
-    return this.taskRepository.save(task);
+  async createTask(task: CreateTaskDto): Promise<Task> {
+    const newTask = this.taskRepository.create(task);
+    return this.taskRepository.save(newTask);
   }
 
   async findAll(): Promise<Task[]> {
@@ -26,7 +30,7 @@ export class TaskService {
     return task;
   }
 
-  async updateTask(id: number, task: Partial<Task>): Promise<Task> {
+  async updateTask(id: number, task: UpdateTaskDto): Promise<Task> {
     const existingTask = await this.taskRepository.findOneBy({ id });
     if (!existingTask) {
       throw new HttpException('Task not found', HttpStatus.NOT_FOUND);
@@ -40,5 +44,14 @@ export class TaskService {
     if (result.affected === 0) {
       throw new HttpException('Task not found', HttpStatus.NOT_FOUND);
     }
+  }
+
+  async updateStatus(id: number, status: UpdateTaskStatusDto): Promise<Task> {
+    const task = await this.taskRepository.findOneBy({ id });
+    if (!task) {
+      throw new HttpException('Task not found', HttpStatus.NOT_FOUND);
+    }
+    task.status = status.status;
+    return this.taskRepository.save(task);
   }
 }
