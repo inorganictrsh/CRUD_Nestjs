@@ -5,16 +5,32 @@ import { Repository } from 'typeorm';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { User } from 'src/user/entities/user.entity';
+import { TaskStatus } from './status/task-status';
 
 @Injectable()
 export class TaskService {
-  @InjectRepository(Task)
-  private readonly taskRepository: Repository<Task>;
+  constructor(
+    @InjectRepository(Task)
+    private readonly taskRepository: Repository<Task>,
+
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
 
   // Add methods to interact with the taskRepository here, e.g., create, find, update, delete tasks.
 
-  async createTask(task: CreateTaskDto): Promise<Task> {
-    const newTask = this.taskRepository.create(task);
+  async createTask(task: CreateTaskDto) {
+    const user = await this.userRepository.findOneBy({ id: task.user });
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+    const newTask = this.taskRepository.create({
+      title: task.title,
+      description: task.description,
+      user: user,
+      status: TaskStatus.PENDING, // Default status
+    });
     return this.taskRepository.save(newTask);
   }
 

@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { TaskStatus } from '../status/task-status';
+import { User } from 'src/user/entities/user.entity';
 
 @Entity()
 export class Task {
@@ -11,4 +12,10 @@ export class Task {
   description: string;
   @Column({ default: 'pending', type: 'enum', enum: TaskStatus })
   status: TaskStatus;
+  @Column({ type: 'int' })
+  @ManyToOne(() => User, (user) => user.tasks, {
+    eager: true,
+    nullable: false,
+  })
+  user: User;
 }
